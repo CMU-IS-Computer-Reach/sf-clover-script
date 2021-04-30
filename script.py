@@ -81,7 +81,7 @@ customers.drop(['Customer ID', 'Address Line 1', 'Address Line 2',
 transactions = payments.merge(orders, on='Order ID', how='inner')
 transactions.insert(1, "AccountID", ['Curbside Sales (Outgoing)']*len(trans.index), True)
 transactions.insert(2, "Site_Served__c", ['Curbside Sales (Outgoing)']*len(trans.index), True)
-trans.rename(columns= {'Customer Name':'Site_Contact__c', 'Order Payment State':'StageName'}, inplace=True)
+transactions.rename(columns= {'Customer Name':'Site_Contact__c', 'Order Payment State':'StageName'}, inplace=True)
 
 # TODO: Concatanate Name, CRid, Date, and Amount as David lays it out,
 #        this information goes into a 'Name' column for SF, then drop other cols
