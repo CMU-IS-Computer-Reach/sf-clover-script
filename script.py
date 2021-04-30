@@ -15,6 +15,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Define file names and defaults
+ORDERS_CSV_FILE      = 'orders.csv'       # Orders csv file exported from Clover
+PAYMENTS_CSV_FILE    = 'payments.csv'     # Payments csv file exported from Clover
+                                          # Orders and Payments should be exported with same date range 
+
 CUSTOMERS_CSV_FILE   = 'customers.csv'    # Customers csv file exported from Clover
 CSV_HISTORY_DIR      = 'csv_history'      # Directory to which csvs are copied
 LAST_INVOKED_FILE    = 'last_invoked.txt' # File storing the date this script was last run
@@ -45,6 +49,8 @@ sf = Salesforce(
 
 # Load csvs
 try:
+    orders = pd.read_csv(ORDERS_CSV_FILE)
+    payments = pd.read_csv(PAYMENTS_CSV_FILE)
     customers = pd.read_csv(CUSTOMERS_CSV_FILE)
     print('Files loaded!')
 except FileNotFoundError:
@@ -52,11 +58,33 @@ except FileNotFoundError:
     sys.exit()
 
 # Drop irrelevant columns
+   orders.drop(['Invoice Number', 'Order Number', 'Order Employee ID', 
+                'Order Employee Name', 'Order Employee Custom ID', 
+                'Currency', 'Tax Amount', 'Tip', 'Service Charge',
+                'Discount', 'Refunds Total', 'Manual Refunds Total', 
+                'Credit Card Auth Code', 'Credit Card Transaction ID', 
+                'Tender'], axis=1, inplace=True)
+ payments.drop(['Payment ID', 'Transaction #', 'Note', 'Tender', 'Result',
+                'Order Date', 'External Payment ID', 'Invoice Number', 
+                'Card Auth Code', 'Card Brand', 'Card Number', 'Card Entry Type', 
+                'Currency', 'Tax Amount', 'Tip Amount', 'Service Charge Amount', 
+                'Payment Employee ID', 'Payment Employee Name', 
+                'Payment Employee Custom ID', 'Order Employee ID',
+                'Order Employee Name', 'Order Employee Custom ID', 'Device',
+                '# Refunds', 'Refund Amount'], axis=1, inplace=True)
 customers.drop(['Customer ID', 'Address Line 1', 'Address Line 2',
                 'Address Line 3', 'City', 'State / Province',
                 'Postal / Zip Code', 'Country', 'Marketing Allowed',
-                'Additional Addresses'],
-               axis=1, inplace=True)
+                'Additional Addresses'], axis=1, inplace=True)
+
+# Connect Order and Payment Data Together
+transactions = payments.merge(orders, on='Order ID', how='inner')
+transactions.insert(1, "AccountID", ['Curbside Sales (Outgoing)']*len(trans.index), True)
+transactions.insert(2, "Site_Served__c", ['Curbside Sales (Outgoing)']*len(trans.index), True)
+trans.rename(columns= {'Customer Name':'Site_Contact__c', 'Order Payment State':'StageName'}, inplace=True)
+
+# TODO: Concatanate Name, CRid, Date, and Amount as David lays it out,
+#        this information goes into a 'Name' column for SF, then drop other cols
 
 # Filter out customers by join date
 customers_start_date = dt.date.today() - dt.timedelta(days=DEFAULT_NUM_DAYS_AGO)
