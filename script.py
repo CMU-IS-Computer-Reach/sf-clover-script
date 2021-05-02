@@ -65,7 +65,8 @@ orders.drop(['Invoice Number', 'Order Number', 'Order Employee ID',
                 'Currency', 'Tax Amount', 'Tip', 'Service Charge',
                 'Discount', 'Refunds Total', 'Manual Refunds Total', 
                 'Credit Card Auth Code', 'Credit Card Transaction ID', 
-                'Tender'], axis=1, inplace=True)
+                'Tender', 'Order Date', 'Order Total',
+                'Payments Total', 'Payment Note'], axis=1, inplace=True)
 payments.drop(['Payment ID', 'Transaction #', 'Note', 'Tender', 'Result',
                 'Order Date', 'External Payment ID', 'Invoice Number', 
                 'Card Auth Code', 'Card Brand', 'Card Number', 'Card Entry Type', 
@@ -77,8 +78,7 @@ payments.drop(['Payment ID', 'Transaction #', 'Note', 'Tender', 'Result',
 customers.drop(['Customer ID', 'Address Line 1', 'Address Line 2',
                 'Address Line 3', 'City', 'State / Province',
                 'Postal / Zip Code', 'Country', 'Marketing Allowed',
-                'Additional Addresses', 'Order Date', 'Order Total',
-                'Payments Total', 'Payment Note'], axis=1, inplace=True)
+                'Additional Addresses'], axis=1, inplace=True)
                 # Order Total & Payments Total might be needed if not every order is paid in full
                 # No evidence of this from the data we have though...
 
