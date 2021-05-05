@@ -103,6 +103,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.test
 .venv
 env/
 venv/
@@ -130,5 +131,6 @@ dmypy.json
 
 # Script-specific files
 log.txt
-last_invoked.txt
 *.csv
+csv_history/
+
