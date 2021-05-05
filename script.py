@@ -39,9 +39,9 @@ start_time = dt.datetime.now()
 
 # Parse commandline arguments
 parser = argparse.ArgumentParser(description='Write data from Clover CSV files to SF.')
-parser.add_argument('start_date', help='start date of time interval')
+parser.add_argument('start_date', help='start of date range (mm-dd-yyyy)')
 parser.add_argument('end_date', nargs='?', default=start_time.strftime(DATE_FORMAT),
-    help='end date of time interval')
+    help='end of date range (mm-dd-yyyy)')
 parser.add_argument('-t', dest='test', action='store_true',
     help='flag for running on a test SF instance (must have a valid .env.test file)')
 
@@ -102,18 +102,16 @@ orders.drop(['Invoice Number', 'Order Number', 'Order Employee ID', 'Order Emplo
              'Credit Card Transaction ID', 'Tender', 'Order Date', 'Order Total', 'Payments Total',
              'Payment Note'], axis=1, inplace=True)
 
-payments.drop(['Payment ID', 'Transaction #', 'Note', 'Tender', 'Result',
-               'Order Date', 'External Payment ID', 'Invoice Number',
-               'Card Auth Code', 'Card Brand', 'Card Number', 'Card Entry Type',
-               'Currency', 'Tax Amount', 'Tip Amount', 'Service Charge Amount',
-               'Payment Employee ID', 'Payment Employee Name',
-               'Payment Employee Custom ID', 'Order Employee ID',
-               'Order Employee Name', 'Order Employee Custom ID', 'Device',
-               '# Refunds', 'Refund Amount'], axis=1, inplace=True)
+payments.drop(['Payment ID', 'Transaction #', 'Note', 'Tender', 'Result', 'Order Date',
+               'External Payment ID', 'Invoice Number', 'Card Auth Code', 'Card Brand',
+               'Card Number', 'Card Entry Type', 'Currency', 'Tax Amount', 'Tip Amount',
+               'Service Charge Amount', 'Payment Employee ID', 'Payment Employee Name',
+               'Payment Employee Custom ID', 'Order Employee ID', 'Order Employee Name',
+               'Order Employee Custom ID', 'Device', '# Refunds', 'Refund Amount'], axis=1,
+               inplace=True)
 
-customers.drop(['Customer ID', 'Address Line 1', 'Address Line 2',
-                'Address Line 3', 'City', 'State / Province',
-                'Postal / Zip Code', 'Country', 'Marketing Allowed',
+customers.drop(['Customer ID', 'Address Line 1', 'Address Line 2', 'Address Line 3', 'City',
+                'State / Province', 'Postal / Zip Code', 'Country', 'Marketing Allowed',
                 'Additional Addresses'], axis=1, inplace=True)
 
 # Connect Order and Payment data together
@@ -176,7 +174,7 @@ transactions_skipped = 0
 for transaction in transaction_data:
     try:
         transaction['CloseDate'] = dt.datetime.strptime(transaction['CloseDate'],
-                                                        '%d-%b-%Y %I:%M %p %Z',).isoformat()
+                                                        '%d-%b-%Y %I:%M %p %Z').isoformat()
         sf.Opportunity.create(transaction)
         log("\tInserted transaction '{}'\n".format(transaction['Name']))
     except Exception as e:
