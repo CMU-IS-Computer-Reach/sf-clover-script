@@ -1,7 +1,7 @@
 # script.py: populate Salesforce with data exported from Clover
 # Write customers who joined since the last time this script was run (or over the last
 # DEFAULT_NUM_DAYS_AGO days). Log output to LOG_FILE and make a copy of the csv in
-# "CSV_HISTORY_DIR/<today's date>/customers.csv".
+# "CSV_HISTORY_DIR/<timestamp>/customers.csv".
 #
 # Required environment variables
 # SF_USERNAME : Salesforce username
@@ -76,6 +76,15 @@ if args.test:
 
 sf = Salesforce(**connection_args)
 
+# Lookup record type "Item Shipment"
+data = sf.query_all("SELECT Id FROM RecordType WHERE Name = 'Item Shipment' LIMIT 1")
+recordtype_id = None
+if data['totalSize'] == 0:
+    log('No RecordType found\n')
+    sys.exit()
+else:
+    recordtype_id = data['records'][0]['Id']
+
 # Lookup organization "Curbside Sales (Outgoing)"
 data = sf.query_all("SELECT Id FROM Account WHERE Name = 'Curbside Sales (Outgoing)' LIMIT 1")
 org_id = None
@@ -119,11 +128,13 @@ transactions = payments.merge(orders, on='Order ID', how='inner')
 
 # Stage transaction data for SF
 transactions.fillna('', inplace=True)
-transactions.insert(1, "AccountID", [org_id]*len(transactions.index), True)
-transactions.insert(2, "Site_Served__c", [org_id]*len(transactions.index), True)
 
-# Note: no permissions to write to RecordTypeName__c
-# transactions.insert(3, 'RecordTypeName__c', ['Item Shipment']*len(transactions.index), True)
+if org_id is not None:
+    transactions.insert(1, "AccountId", [org_id]*len(transactions.index), True)
+    transactions.insert(2, "Site_Served__c", [org_id]*len(transactions.index), True)
+
+if recordtype_id is not None:
+    transactions.insert(3, 'RecordTypeId', [recordtype_id]*len(transactions.index), True)
 
 # Create Donation and Shipment record names
 shipments = transactions.to_dict('records')
