@@ -28,3 +28,5 @@ python3 script.py -t 05-05-2021         # Run with a test SF instance from May 5
 python3 script.py 04-20-2021 05-05-2021 # Run with a prod SF instance from April 20, 2021 til May 5, 2021
 ```
 
+### Script output
+Everything you see on console while the script is running will appear in `log.txt`. Additionally, the `customers.csv`, `orders.csv`, and `payments.csv` will be saved to `csv_history/<t>/input` while the actual rows that the script tried writing to Salesforce are saved to `csv_history/<t>/actual` (`customers.csv` and `transactions.csv`), where `<t>` represents the time at which the script was invoked. Note that `customers.csv`, `orders.csv`, and `payments.csv` are removed if the script runs to completion.

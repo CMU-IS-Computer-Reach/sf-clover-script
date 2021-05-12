@@ -26,6 +26,8 @@ CUSTOMERS_CSV_FILE   = 'customers.csv'    # Customers csv file exported from Clo
 CSV_HISTORY_DIR      = 'csv_history'      # Directory to which csvs are copied
 LOG_FILE             = 'log.txt'          # File to which this script appends logs
 DATE_FORMAT          = '%m-%d-%Y'         # Date format used by the script
+CSV_DATETIME_FORMAT  = '%m-%d-%Y %I:%M%p' # Datetime format for each subdirectory under
+                                          #   CSV_HISTORY_DIR
 DATETIME_FORMAT      = '%c'               # Datetime format stored in LOG_FILE
 
 # Function to print to console and write to LOG_FILE
@@ -161,14 +163,13 @@ transactions.drop(['Customer Name', 'Order ID', 'Note'], axis=1, inplace=True)
 customers_start_date = dt.datetime.strptime(args.start_date, DATE_FORMAT).date()
 customers_end_date = dt.datetime.strptime(args.end_date, DATE_FORMAT).date()
 
-customers_limited = customers[
-    pd.to_datetime(customers['Customer Since']).dt.date >= customers_start_date]
-customers = customers_limited[
-    pd.to_datetime(customers_limited['Customer Since']).dt.date <= customers_end_date]
+customers = customers[pd.to_datetime(customers['Customer Since']).dt.date >= customers_start_date]
+customers = customers[pd.to_datetime(customers['Customer Since']).dt.date <= customers_end_date]
 
 # Clean customers data
 customers.drop('Customer Since', axis=1, inplace=True)
 customers.columns = ['FirstName', 'LastName', 'Phone', 'Email']
+customers.dropna(subset=['Email'], inplace=True)
 customers.fillna('', inplace=True)
 customers.insert(1, 'AccountId', [org_id]*len(customers.index), True)
 
@@ -206,7 +207,7 @@ for customer in customer_data:
         customers_skipped += 1
 
 # Make copies of csvs
-dest_csv_path = "{}/{}/".format(CSV_HISTORY_DIR, start_time.isoformat())
+dest_csv_path = "{}/{}/".format(CSV_HISTORY_DIR, start_time.strftime(CSV_DATETIME_FORMAT))
 os.makedirs(os.path.dirname(dest_csv_path + 'input/'), exist_ok=True)
 copyfile(ORDERS_CSV_FILE, dest_csv_path + 'input/orders.csv')
 copyfile(PAYMENTS_CSV_FILE, dest_csv_path + 'input/payments.csv')
@@ -215,6 +216,14 @@ copyfile(CUSTOMERS_CSV_FILE, dest_csv_path + 'input/customers.csv')
 os.makedirs(os.path.dirname(dest_csv_path + 'actual/'), exist_ok=True)
 customers.to_csv(dest_csv_path + 'actual/customers.csv')
 transactions.to_csv(dest_csv_path + 'actual/transactions.csv')
+
+# Delete input csvs
+try:
+    os.remove(ORDERS_CSV_FILE)
+    os.remove(PAYMENTS_CSV_FILE)
+    os.remove(CUSTOMERS_CSV_FILE)
+except OSError:
+    pass
 
 # Log results of run
 customers_written = len(customer_data) - customers_skipped
